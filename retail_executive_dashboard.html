@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Retail Sales — Executive Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1" integrity="sha384-jb8JQMbMoBUzgWatfe6COACi2ljcDdZQ2OxczGA3bGNeWe+6DChMTBJemed7ZnvJ" crossorigin="anonymous"></script>
+<style>
+:root{
+  --bg-page:#f4f6fb; --bg-card:#ffffff; --bg-header:#111827; --radius:12px; --gap:18px;
+  --text-primary:#111827; --text-secondary:#6b7280; --text-on-dark:#f9fafb;
+  --positive:#16a34a; --negative:#dc2626; --accent:#4f46e5;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg-page);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--text-primary);}
+.dashboard-container{max-width:1360px;margin:0 auto;padding:20px;}
+.dashboard-header{background:var(--bg-header);color:var(--text-on-dark);padding:22px 26px;border-radius:var(--radius);margin-bottom:var(--gap);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;}
+.dashboard-header h1{font-size:21px;font-weight:600;margin:0;}
+.dashboard-header p{margin:4px 0 0;font-size:13px;color:#9ca3af;}
+.filters{display:flex;gap:12px;align-items:center;flex-wrap:wrap;}
+.filter-group{display:flex;align-items:center;gap:6px;}
+.filter-group label{font-size:12px;color:rgba(255,255,255,0.7);}
+.filter-group select{padding:7px 10px;border:1px solid rgba(255,255,255,0.25);border-radius:6px;background:rgba(255,255,255,0.1);color:var(--text-on-dark);font-size:13px;}
+.filter-group select option{background:var(--bg-header);color:var(--text-on-dark);}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:var(--gap);margin-bottom:var(--gap);}
+.kpi-card{background:var(--bg-card);border-radius:var(--radius);padding:18px 20px;box-shadow:0 1px 3px rgba(0,0,0,0.08);}
+.kpi-label{font-size:12px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;}
+.kpi-value{font-size:24px;font-weight:700;}
+.kpi-sub{font-size:12px;color:var(--text-secondary);margin-top:4px;}
+.chart-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:var(--gap);margin-bottom:var(--gap);}
+.chart-row.thirds{grid-template-columns:repeat(auto-fit,minmax(320px,1fr));}
+.chart-container{background:var(--bg-card);border-radius:var(--radius);padding:18px 20px;box-shadow:0 1px 3px rgba(0,0,0,0.08);}
+.chart-container h3{font-size:14px;font-weight:600;margin:0 0 12px;display:flex;justify-content:space-between;align-items:center;}
+.chart-container canvas{max-height:280px;}
+.table-section{background:var(--bg-card);border-radius:var(--radius);padding:18px 20px;box-shadow:0 1px 3px rgba(0,0,0,0.08);overflow-x:auto;margin-bottom:var(--gap);}
+.data-table{width:100%;border-collapse:collapse;font-size:13px;}
+.data-table thead th{text-align:left;padding:9px 10px;border-bottom:2px solid #e5e7eb;color:var(--text-secondary);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:0.4px;}
+.data-table tbody td{padding:9px 10px;border-bottom:1px solid #f0f0f0;}
+.data-table tbody tr:hover{background:#f8f9fb;}
+.badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600;}
+.badge.good{background:#dcfce7;color:#166534;}
+.badge.warn{background:#fee2e2;color:#991b1b;}
+.dashboard-footer{text-align:center;color:var(--text-secondary);font-size:12px;padding:10px 0 20px;}
+select#toggleMetric{cursor:pointer;}
+@media (max-width:768px){
+  .dashboard-header{flex-direction:column;align-items:flex-start;}
+  .kpi-row{grid-template-columns:repeat(2,1fr);}
+  .chart-row, .chart-row.thirds{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+<div class="dashboard-container">
+
+  <header class="dashboard-header">
+    <div>
+      <h1>Retail Sales — Executive Dashboard</h1>
+      <p>India retail chain · FY2023–FY2025 · 58,799 cleaned transaction line items</p>
+    </div>
+    <div class="filters">
+      <div class="filter-group">
+        <label for="yearFilter">Year</label>
+        <select id="yearFilter">
+          <option value="all">All Years</option>
+          <option value="2023">2023</option>
+          <option value="2024">2024</option>
+          <option value="2025">2025</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label for="regionFilter">Region</label>
+        <select id="regionFilter">
+          <option value="all">All Regions</option>
+          <option value="North">North</option>
+          <option value="South">South</option>
+          <option value="East">East</option>
+          <option value="West">West</option>
+        </select>
+      </div>
+    </div>
+  </header>
+
+  <section class="kpi-row">
+    <div class="kpi-card"><div class="kpi-label">Total Sales</div><div class="kpi-value" id="kpi-sales">–</div></div>
+    <div class="kpi-card"><div class="kpi-label">Total Profit</div><div class="kpi-value" id="kpi-profit">–</div></div>
+    <div class="kpi-card"><div class="kpi-label">Profit Margin</div><div class="kpi-value" id="kpi-margin">–</div></div>
+    <div class="kpi-card"><div class="kpi-label">Orders</div><div class="kpi-value" id="kpi-orders">–</div></div>
+    <div class="kpi-card"><div class="kpi-label">Customers</div><div class="kpi-value" id="kpi-customers">–</div></div>
+    <div class="kpi-card"><div class="kpi-label">Avg Order Value</div><div class="kpi-value" id="kpi-aov">–</div></div>
+    <div class="kpi-card"><div class="kpi-label">Return Rate</div><div class="kpi-value" id="kpi-return">–</div></div>
+  </section>
+
+  <section class="chart-row">
+    <div class="chart-container">
+      <h3>Sales &amp; Profit Trend
+        <select id="toggleMetric">
+          <option value="both">Sales + Profit</option>
+          <option value="sales">Sales Only</option>
+          <option value="profit">Profit Only</option>
+        </select>
+      </h3>
+      <canvas id="trendChart"></canvas>
+    </div>
+    <div class="chart-container">
+      <h3>Region-wise Performance</h3>
+      <canvas id="regionChart"></canvas>
+    </div>
+  </section>
+
+  <section class="chart-row">
+    <div class="chart-container">
+      <h3>Category — Sales vs Profit</h3>
+      <canvas id="categoryChart"></canvas>
+    </div>
+    <div class="chart-container">
+      <h3>Top 10 Products by Sales</h3>
+      <canvas id="productChart"></canvas>
+    </div>
+  </section>
+
+  <section class="chart-row thirds">
+    <div class="chart-container">
+      <h3>Payment Method Split</h3>
+      <canvas id="paymentChart"></canvas>
+    </div>
+    <div class="chart-container">
+      <h3>Shipping Mode — Avg Delivery Days</h3>
+      <canvas id="shippingChart"></canvas>
+    </div>
+    <div class="chart-container">
+      <h3>Return Rate % by Category</h3>
+      <canvas id="returnChart"></canvas>
+    </div>
+  </section>
+
+  <section class="chart-row">
+    <div class="chart-container">
+      <h3>Customer Segment Contribution</h3>
+      <canvas id="segmentChart"></canvas>
+    </div>
+    <div class="table-section">
+      <h3 style="margin-bottom:12px;">Top States by Sales</h3>
+      <table class="data-table" id="stateTable">
+        <thead><tr><th>State</th><th>Region</th><th>Sales</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer class="dashboard-footer">
+    Data as of Dec 2025 · Portfolio project by Vijay · Static snapshot (rebuild required to refresh with new data)
+  </footer>
+</div>
+
+<script>
+const DATA = {"kpis":{"total_sales":2083990871.45,"total_profit":559033077.13,"margin_pct":26.825121203195852,"orders":57718,"customers":8767,"aov":36106.4290420666,"return_rate":7.43379989455603,"repeat_customer_pct":92.24364092620053},"monthly":[{"YearMonth":"2023-01","sales":63185115.08,"profit":17541339.69,"orders":1747},{"YearMonth":"2023-02","sales":42999965.21,"profit":11183612.44,"orders":1274},{"YearMonth":"2023-03","sales":49810747.91,"profit":13299150.17,"orders":1522},{"YearMonth":"2023-04","sales":50668725.02,"profit":14245846.99,"orders":1390},{"YearMonth":"2023-05","sales":54478981.910000004,"profit":14697851.1,"orders":1517},{"YearMonth":"2023-06","sales":46198738.51,"profit":13103087.46,"orders":1355},{"YearMonth":"2023-07","sales":51088536.57,"profit":13536110.79,"orders":1425},{"YearMonth":"2023-08","sales":54177617.71,"profit":14402122.5,"orders":1517},{"YearMonth":"2023-09","sales":57685588.45,"profit":15367706.11,"orders":1593},{"YearMonth":"2023-10","sales":75522511.24,"profit":21132589.05,"orders":2189},{"YearMonth":"2023-11","sales":76142844.78,"profit":20415291.6,"orders":2069},{"YearMonth":"2023-12","sales":67844455.45,"profit":17797165.57,"orders":1884},{"YearMonth":"2024-01","sales":71369966.25,"profit":19133833.18,"orders":1831},{"YearMonth":"2024-02","sales":47647887.38,"profit":12687552.72,"orders":1302},{"YearMonth":"2024-03","sales":52970543.15,"profit":13906163.65,"orders":1437},{"YearMonth":"2024-04","sales":47190574.49,"profit":12336394.0,"orders":1361},{"YearMonth":"2024-05","sales":52041692.87,"profit":13965244.99,"orders":1491},{"YearMonth":"2024-06","sales":47561596.61,"profit":12651956.68,"orders":1358},{"YearMonth":"2024-07","sales":48974138.06,"profit":13045597.81,"orders":1388},{"YearMonth":"2024-08","sales":58069754.6,"profit":15954932.03,"orders":1549},{"YearMonth":"2024-09","sales":61203173.02,"profit":16415867.71,"orders":1617},{"YearMonth":"2024-10","sales":76065637.58,"profit":19631884.54,"orders":2071},{"YearMonth":"2024-11","sales":71937551.56,"profit":19872081.33,"orders":2093},{"YearMonth":"2024-12","sales":65729041.27,"profit":17577065.51,"orders":1718},{"YearMonth":"2025-01","sales":66533796.18,"profit":17837135.67,"orders":1824},{"YearMonth":"2025-02","sales":42918938.07,"profit":11583265.89,"orders":1281},{"YearMonth":"2025-03","sales":55138364.92,"profit":14714365.29,"orders":1482},{"YearMonth":"2025-04","sales":50291878.9,"profit":13773003.79,"orders":1370},{"YearMonth":"2025-05","sales":55740192.07,"profit":15107800.8,"orders":1512},{"YearMonth":"2025-06","sales":48669426.24,"profit":12503823.22,"orders":1376},{"YearMonth":"2025-07","sales":49937761.25,"profit":13148613.88,"orders":1422},{"YearMonth":"2025-08","sales":52644149.84,"profit":14022285.15,"orders":1476},{"YearMonth":"2025-09","sales":60243809.11,"profit":16416107.38,"orders":1621},{"YearMonth":"2025-10","sales":71918350.77,"profit":18729716.19,"orders":2091},{"YearMonth":"2025-11","sales":75524400.86,"profit":20240629.29,"orders":2030},{"YearMonth":"2025-12","sales":63864418.56,"profit":17055882.96,"orders":1846}],"region":[{"Region":"West","sales":547856190.43,"profit":147421143.91},{"Region":"South","sales":522366723.27,"profit":141029749.07},{"Region":"North","sales":507503329.3,"profit":135064772.58},{"Region":"East","sales":506264628.45,"profit":135517411.57}],"category":[{"Category":"Electronics","sales":1232270615.8,"profit":324783156.7},{"Category":"Home & Furniture","sales":453027048.34000003,"profit":121396195.42},{"Category":"Sports & Fitness","sales":250153909.79,"profit":69129383.62},{"Category":"Fashion","sales":106566541.41,"profit":29677311.61},{"Category":"Grocery","sales":24601378.53,"profit":8543913.13},{"Category":"Books & Stationery","sales":17371377.58,"profit":5503116.65}],"top_products":[{"Product Name":"boAt Laptop Lite","sales":52236856.75},{"Product Name":"HP Headphone Plus","sales":52201548.47},{"Product Name":"Dell Laptop Plus","sales":52078217.93},{"Product Name":"HP Accessorie Pro","sales":37650376.41},{"Product Name":"Apple Camera Plus","sales":35287438.32},{"Product Name":"HP Laptop Plus","sales":34794737.28},{"Product Name":"Sony Accessorie Plus","sales":34127075.72},{"Product Name":"boAt Laptop Max","sales":33455112.759999998},{"Product Name":"Samsung Laptop Pro","sales":32241276.37},{"Product Name":"IKEA Kitchenware Lite","sales":30925081.68}],"payment":[{"method":"UPI","count":18107},{"method":"Credit Card","count":16413},{"method":"Debit Card","count":10330},{"method":"Net Banking","count":5861},{"method":"Cash on Delivery","count":5113},{"method":"Wallet","count":2975}],"shipping":[{"Shipping Mode":"Economy","avg_days":20.674601844090528,"return_rate":7.678122380553227},{"Shipping Mode":"Express","avg_days":6.787026049612929,"return_rate":7.4758433632819115},{"Shipping Mode":"Same Day","avg_days":1.861255230125523,"return_rate":7.447698744769875},{"Shipping Mode":"Standard","avg_days":14.079349838831355,"return_rate":7.355462588299842}],"returns_cat":[{"Category":"Books & Stationery","Is Returned":6.286748077792854},{"Category":"Electronics","Is Returned":9.037037037037036},{"Category":"Fashion","Is Returned":9.395911632596938},{"Category":"Grocery","Is Returned":6.189940264912129},{"Category":"Home & Furniture","Is Returned":6.236431813696467},{"Category":"Sports & Fitness","Is Returned":6.7308879832036554}],"segment":[{"Customer Segment":"Consumer","sales":1157508111.67,"customers":4904},{"Customer Segment":"Corporate","sales":409021915.56,"customers":1744},{"Customer Segment":"Home Office","sales":210467542.89,"customers":864},{"Customer Segment":"Small Business","sales":306993301.33,"customers":1255}],"state":[{"State":"Goa","Region":"West","sales":146603499.03},{"State":"Maharashtra","Region":"West","sales":146206597.47},{"State":"Karnataka","Region":"South","sales":138609897.49},{"State":"Haryana","Region":"North","sales":135893273.63},{"State":"Jharkhand","Region":"East","sales":133406969.61},{"State":"Gujarat","Region":"West","sales":130416945.72},{"State":"West Bengal","Region":"East","sales":130328981.84},{"State":"Kerala","Region":"South","sales":130072308.46},{"State":"Telangana","Region":"South","sales":127084973.2},{"State":"Tamil Nadu","Region":"South","sales":126599544.12},{"State":"Uttar Pradesh","Region":"North","sales":124658716.09},{"State":"Rajasthan","Region":"West","sales":124629148.21}]};
+
+const COLORS = ['#4f46e5','#16a34a','#0891b2','#ea580c','#dc2626','#7c3aed','#f59e0b','#0d9488'];
+
+function fmtCurrency(v){
+  if (Math.abs(v) >= 1e7) return '₹' + (v/1e7).toFixed(2) + 'Cr';
+  if (Math.abs(v) >= 1e5) return '₹' + (v/1e5).toFixed(2) + 'L';
+  if (Math.abs(v) >= 1e3) return '₹' + (v/1e3).toFixed(1) + 'K';
+  return '₹' + v.toFixed(0);
+}
+function fmtNumber(v){
+  if (Math.abs(v) >= 1e6) return (v/1e6).toFixed(2) + 'M';
+  if (Math.abs(v) >= 1e3) return (v/1e3).toFixed(1) + 'K';
+  return v.toLocaleString();
+}
+
+// ---- KPI rendering ----
+function renderKPIs(k){
+  document.getElementById('kpi-sales').textContent = fmtCurrency(k.total_sales);
+  document.getElementById('kpi-profit').textContent = fmtCurrency(k.total_profit);
+  document.getElementById('kpi-margin').textContent = k.margin_pct.toFixed(1) + '%';
+  document.getElementById('kpi-orders').textContent = fmtNumber(k.orders);
+  document.getElementById('kpi-customers').textContent = fmtNumber(k.customers);
+  document.getElementById('kpi-aov').textContent = fmtCurrency(k.aov);
+  document.getElementById('kpi-return').textContent = k.return_rate.toFixed(2) + '%';
+}
+renderKPIs(DATA.kpis);
+
+// ---- Trend chart (year + metric toggle) ----
+let trendChart;
+function renderTrend(year, metric){
+  const rows = DATA.monthly.filter(r => year === 'all' || r.YearMonth.startsWith(year));
+  const labels = rows.map(r => r.YearMonth);
+  const datasets = [];
+  if (metric !== 'profit') datasets.push({label:'Sales', data: rows.map(r=>r.sales), borderColor: COLORS[0], backgroundColor: COLORS[0]+'20', borderWidth:2, tension:0.3, fill:true});
+  if (metric !== 'sales') datasets.push({label:'Profit', data: rows.map(r=>r.profit), borderColor: COLORS[1], backgroundColor: COLORS[1]+'20', borderWidth:2, tension:0.3, fill:true});
+
+  if (trendChart) trendChart.destroy();
+  trendChart = new Chart(document.getElementById('trendChart'), {
+    type:'line',
+    data:{labels, datasets},
+    options:{responsive:true, animation:false, plugins:{legend:{position:'bottom'}},
+      scales:{y:{ticks:{callback:v=>fmtCurrency(v)}}}}
+  });
+}
+
+// ---- Region chart ----
+function renderRegion(highlight){
+  const rows = DATA.region;
+  new Chart(document.getElementById('regionChart'), {
+    type:'bar',
+    data:{labels: rows.map(r=>r.Region), datasets:[
+      {label:'Sales', data: rows.map(r=>r.sales), backgroundColor: rows.map(r => r.Region===highlight || highlight==='all' ? COLORS[0] : '#d1d5db')},
+      {label:'Profit', data: rows.map(r=>r.profit), backgroundColor: rows.map(r => r.Region===highlight || highlight==='all' ? COLORS[1] : '#e5e7eb')}
+    ]},
+    options:{responsive:true, animation:false, plugins:{legend:{position:'bottom'}}, scales:{y:{ticks:{callback:v=>fmtCurrency(v)}}}}
+  });
+}
+
+// ---- Category chart ----
+new Chart(document.getElementById('categoryChart'), {
+  type:'bar',
+  data:{labels: DATA.category.map(c=>c.Category), datasets:[
+    {label:'Sales', data: DATA.category.map(c=>c.sales), backgroundColor: COLORS[2]},
+    {label:'Profit', data: DATA.category.map(c=>c.profit), backgroundColor: COLORS[3]}
+  ]},
+  options:{responsive:true, animation:false, plugins:{legend:{position:'bottom'}}, scales:{y:{ticks:{callback:v=>fmtCurrency(v)}}, x:{ticks:{autoSkip:false, maxRotation:30, minRotation:20}}}}
+});
+
+// ---- Top products ----
+new Chart(document.getElementById('productChart'), {
+  type:'bar',
+  data:{labels: DATA.top_products.map(p=>p['Product Name']), datasets:[{label:'Sales', data: DATA.top_products.map(p=>p.sales), backgroundColor: COLORS[4]}]},
+  options:{indexAxis:'y', responsive:true, animation:false, plugins:{legend:{display:false}}, scales:{x:{ticks:{callback:v=>fmtCurrency(v)}}}}
+});
+
+// ---- Payment donut ----
+new Chart(document.getElementById('paymentChart'), {
+  type:'doughnut',
+  data:{labels: DATA.payment.map(p=>p.method), datasets:[{data: DATA.payment.map(p=>p.count), backgroundColor: COLORS}]},
+  options:{responsive:true, animation:false, plugins:{legend:{position:'bottom', labels:{boxWidth:10, font:{size:10}}}}}
+});
+
+// ---- Shipping ----
+new Chart(document.getElementById('shippingChart'), {
+  type:'bar',
+  data:{labels: DATA.shipping.map(s=>s['Shipping Mode']), datasets:[{label:'Avg Delivery Days', data: DATA.shipping.map(s=>s.avg_days), backgroundColor: COLORS[5]}]},
+  options:{responsive:true, animation:false, plugins:{legend:{display:false}}}
+});
+
+// ---- Returns ----
+new Chart(document.getElementById('returnChart'), {
+  type:'bar',
+  data:{labels: DATA.returns_cat.map(r=>r.Category), datasets:[{label:'Return Rate %', data: DATA.returns_cat.map(r=>r['Is Returned']), backgroundColor: COLORS[6]}]},
+  options:{responsive:true, animation:false, plugins:{legend:{display:false}}, scales:{x:{ticks:{autoSkip:false, maxRotation:30, minRotation:20}}}}
+});
+
+// ---- Segment donut ----
+new Chart(document.getElementById('segmentChart'), {
+  type:'doughnut',
+  data:{labels: DATA.segment.map(s=>s['Customer Segment']), datasets:[{data: DATA.segment.map(s=>s.sales), backgroundColor: COLORS}]},
+  options:{responsive:true, animation:false, plugins:{legend:{position:'bottom'}}}
+});
+
+// ---- State table ----
+const tbody = document.querySelector('#stateTable tbody');
+DATA.state.forEach(s => {
+  const tr = document.createElement('tr');
+  tr.innerHTML = `<td>${s.State}</td><td>${s.Region}</td><td>${fmtCurrency(s.sales)}</td>`;
+  tbody.appendChild(tr);
+});
+
+// ---- Filters wiring ----
+document.getElementById('toggleMetric').addEventListener('change', e => {
+  renderTrend(document.getElementById('yearFilter').value, e.target.value);
+});
+document.getElementById('yearFilter').addEventListener('change', e => {
+  renderTrend(e.target.value, document.getElementById('toggleMetric').value);
+});
+document.getElementById('regionFilter').addEventListener('change', e => {
+  renderRegion(e.target.value);
+});
+
+renderTrend('all', 'both');
+renderRegion('all');
+</script>
+</body>
+</html>
