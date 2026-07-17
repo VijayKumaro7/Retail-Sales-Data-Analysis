@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="images/logo.svg" alt="Retail Sales Data Analysis logo" width="140">
+</p>
+
 # 🛒 Retail Sales Data Analysis
 
 An end-to-end data analytics project on a simulated pan-India retail chain (2023–2025).

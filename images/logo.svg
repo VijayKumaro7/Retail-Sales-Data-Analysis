@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Retail Sales Data Analysis logo">
+  <defs>
+    <linearGradient id="bagGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#4338ca"/>
+    </linearGradient>
+    <linearGradient id="barGrad" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0%" stop-color="#a5b4fc"/>
+      <stop offset="100%" stop-color="#e0e7ff"/>
+    </linearGradient>
+  </defs>
+
+  <!-- rounded app-icon background -->
+  <rect x="16" y="16" width="480" height="480" rx="112" fill="#111827"/>
+
+  <!-- shopping bag body -->
+  <path d="M136 190 h240 a24 24 0 0 1 23.9 26.2 l-16.4 172 a40 40 0 0 1 -39.8 36.2 H168.3 a40 40 0 0 1 -39.8 -36.2 l-16.4 -172 A24 24 0 0 1 136 190 Z"
+        fill="url(#bagGrad)"/>
+
+  <!-- bag handles -->
+  <path d="M196 214 v-44 a60 60 0 0 1 120 0 v44"
+        fill="none" stroke="#818cf8" stroke-width="26" stroke-linecap="round"/>
+
+  <!-- rising bars inside the bag -->
+  <g fill="url(#barGrad)">
+    <rect x="176" y="316" width="40" height="64" rx="8"/>
+    <rect x="236" y="284" width="40" height="96" rx="8"/>
+    <rect x="296" y="252" width="40" height="128" rx="8"/>
+  </g>
+
+  <!-- growth arrow over the bars -->
+  <path d="M172 288 L248 236 L286 258 L344 210"
+        fill="none" stroke="#f9fafb" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M306 200 L348 206 L342 248 Z" fill="#f9fafb"/>
+</svg>
